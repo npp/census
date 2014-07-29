@@ -343,7 +343,7 @@ class Census(object):
     def __init__(self, key, year=None, session=None):
 
         if not session:
-            session = requests.session()
+            session = requests.Session()
 
         self.acs = ACS5Client(key, year, session)
         self.acs5 = ACS5Client(key, year, session)
