@@ -15,6 +15,9 @@ DEFINITIONS = {
     'acs1/profile': {
         '2012': 'http://www.census.gov/developers/data/acs_1yr_profile_2012.xml',
     },
+    'pep/natstprc': {
+        '2013': 'http://api.census.gov/data/2013/pep/natstprc'
+    },
     'sf1': {
         '2010': 'http://www.census.gov/developers/data/sf1.xml',
         '2000': 'http://www.census.gov/developers/data/2000_sf1.xml',
@@ -105,7 +108,7 @@ class Client(object):
 
         return data
 
-    def get(self, fields, geo, year=None):
+    def get(self, fields, geo, year=None, extra_params={}):
 
         if len(fields) > 50:
             raise CensusException("only 50 columns per call are allowed")
@@ -117,11 +120,13 @@ class Client(object):
 
         url = ENDPOINT_URL % (year, self.dataset)
 
-        params = {
-            'get': ",".join(fields),
-            'for': geo['for'],
-            'key': self._key,
-        }
+        params = dict(
+            {
+                'get': ",".join(fields),
+                'for': geo['for'],
+                'key': self._key
+            }.items() + extra_params.items()
+        )
 
         if 'in' in geo:
             params['in'] = geo['in']
@@ -227,6 +232,19 @@ class ACS1DpClient(Client):
             'for': 'congressional district:%s' % district,
             'in': 'state:%s' % state_fips,
         }, **kwargs)
+
+
+class PepNatatprcClient(Client):
+
+    default_year = 2013
+    dataset = 'pep/natstprc'
+
+    @supported_years(2013)
+    def state(self, fields, state_fips, extra_params={}, **kwargs):
+        return self.get(fields, geo={
+            'for': 'state:%s' % state_fips,
+        }, extra_params=extra_params, **kwargs)
+
 
 class SF1Client(Client):
 
@@ -348,5 +366,6 @@ class Census(object):
         self.acs = ACS5Client(key, year, session)
         self.acs5 = ACS5Client(key, year, session)
         self.acs1dp = ACS1DpClient(key, year, session)
+        self.pepnatstprc = PepNatatprcClient(key, year, session)
         self.sf1 = SF1Client(key, year, session)
         self.sf3 = SF3Client(key, year, session)
