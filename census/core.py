@@ -3,7 +3,7 @@ from xml.etree.ElementTree import XML
 import json
 import requests
 
-__version__ = "0.6"
+__version__ = "0.7"
 
 ALL = '*'
 ENDPOINT_URL = 'http://api.census.gov/data/%s/%s'
@@ -14,6 +14,7 @@ DEFINITIONS = {
     },
     'acs1/profile': {
         '2012': 'http://www.census.gov/developers/data/acs_1yr_profile_2012.xml',
+        '2013': 'http://api.census.gov/data/2013/acs1/profile/variables.xml',
     },
     'pep/natstprc': {
         '2013': 'http://api.census.gov/data/2013/pep/natstprc'
@@ -134,6 +135,7 @@ class Client(object):
         headers = {
             'User-Agent': 'python-census/%s github.com/sunlightlabs/census' % __version__
         }
+
         resp = self.session.get(url, params=params, headers=headers)
 
         if resp.status_code == 200:
@@ -213,20 +215,20 @@ class ACS5Client(Client):
 
 class ACS1DpClient(Client):
 
-    default_year = 2012
+    default_year = 2013
     dataset = 'acs1/profile'
 
-    @supported_years(2012)
+    @supported_years(2012, 2013)
     def us(self, fields, **kwargs):
         return self.get(fields, geo={'for': 'us:1'}, **kwargs)
 
-    @supported_years(2012)
+    @supported_years(2012, 2013)
     def state(self, fields, state_fips, **kwargs):
         return self.get(fields, geo={
             'for': 'state:%s' % state_fips,
         }, **kwargs)
 
-    @supported_years(2012)
+    @supported_years(2012, 2013)
     def state_district(self, fields, state_fips, district, **kwargs):
         return self.get(fields, geo={
             'for': 'congressional district:%s' % district,
